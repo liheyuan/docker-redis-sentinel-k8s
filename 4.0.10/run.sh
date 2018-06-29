@@ -18,13 +18,15 @@
 function get_master_host() {
   master_name_upper=$(echo $1 | tr 'a-z' 'A-Z')
   master_host_var="REDIS_${master_name_upper}_MASTER_SERVICE_HOST"
-  return `eval echo '$'"$master_host_var"`
+  master_host=`eval echo '$'"$master_host_var"`
+  return $master_host
 }
 
 function get_master_port() {
   master_name_upper=$(echo $1 | tr 'a-z' 'A-Z')
   master_port_var="REDIS_${master_name_upper}_MASTER_SERVICE_PORT"
-  return `eval echo '$'"$master_port_var"`
+  master_port=`eval echo '$'"$master_port_var"`
+  return $master_port
 }
 
 function launchmaster() {
