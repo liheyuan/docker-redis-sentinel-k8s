@@ -27,7 +27,6 @@ function get_master_port() {
   return `eval echo '$'"$master_port_var"`
 }
 
-
 function launchmaster() {
   if [[ ! -e /redis-master-data ]]; then
     echo "Redis master data doesn't exist, data won't be persistent!"
@@ -84,21 +83,28 @@ function launchslave() {
     exit 1
   fi
   # get master's ip / port
+  master_host=$(get_master_host $MASTER_NAME)
+  master_port=$(get_master_port $MASTER_PORT)
+
+  if [ x"$master_host" == x"" ];then
+    echo "env var $master_name master host invalid"
+    exit 1
+  fi
+
+  if [ x"$master_port" == x"" ];then
+    echo "env var $master_name master port invalid"
+    exit 1
+  fi
+
+  # try connect to master
   while true; do
-
-    # config for current master name
-    master_host=$(get_master_host $MASTER_NAME)
-    master_port=$(get_master_port $MASTER_PORT)
-
-    if [ x"$master_host" == x"" ];then
-      echo "env var $master_name master host invalid"
-      exit 1
-    fi
-
-    if [ x"$master_port" == x"" ];then
-      echo "env var $master_name master port invalid"
-      exit 1
-    fi
+    redis-cli -h ${master_host} -p ${master_port} INFO
+    if [[ "$?" == "0" ]]; then
+      break
+     fi
+    echo "Connecting to master failed.  Waiting..."
+    sleep 10
+  done
 
   sed -i "s/%master-ip%/${master_host}/" /redis-slave/redis.conf
   sed -i "s/%master-port%/${master_port}/" /redis-slave/redis.conf
