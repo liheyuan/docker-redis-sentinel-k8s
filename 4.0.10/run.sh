@@ -38,9 +38,9 @@ function launchsentinel() {
     # config for current master name
     master_name_upper=$(echo $master_name | tr 'a-z' 'A-Z')
     master_host_var="REDIS_${master_name_upper}_SERVICE_HOST"
-    master_host=eval(echo '$'"$master_host_var")
+    master_host=`eval echo '$'"$master_host_var"`
     master_port_var="REDIS_${master_name_upper}_SERVICE_PORT"
-    master_port=eval(echo '$'"$master_port_var")
+    master_port=`eval echo '$'"$master_port_var"`
 
     if [ x"$master_host" == x"" ];then
       echo "env var $master_host_var invalid"
