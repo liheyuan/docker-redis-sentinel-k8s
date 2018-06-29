@@ -86,7 +86,7 @@ function launchslave() {
   fi
   # get master's ip / port
   master_host=$(get_master_host $MASTER_NAME)
-  master_port=$(get_master_port $MASTER_PORT)
+  master_port=$(get_master_port $MASTER_NAME)
 
   if [ x"$master_host" == x"" ];then
     echo "env var $master_name master host invalid"
