@@ -17,13 +17,13 @@
 
 function get_master_host() {
   master_name_upper=$(echo $1 | tr 'a-z' 'A-Z')
-  master_host_var="REDIS_${master_name_upper}_SERVICE_HOST"
+  master_host_var="REDIS_${master_name_upper}_MASTER_SERVICE_HOST"
   return `eval echo '$'"$master_host_var"`
 }
 
 function get_master_port() {
   master_name_upper=$(echo $1 | tr 'a-z' 'A-Z')
-  master_port_var="REDIS_${master_name_upper}_SERVICE_PORT"
+  master_port_var="REDIS_${master_name_upper}_MASTER_SERVICE_PORT"
   return `eval echo '$'"$master_port_var"`
 }
 
