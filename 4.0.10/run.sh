@@ -15,6 +15,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+function get_master_host() {
+  master_name_upper=$(echo $1 | tr 'a-z' 'A-Z')
+  master_host_var="REDIS_${master_name_upper}_SERVICE_HOST"
+  return `eval echo '$'"$master_host_var"`
+}
+
+function get_master_port() {
+  master_name_upper=$(echo $1 | tr 'a-z' 'A-Z')
+  master_port_var="REDIS_${master_name_upper}_SERVICE_PORT"
+  return `eval echo '$'"$master_port_var"`
+}
+
+
 function launchmaster() {
   if [[ ! -e /redis-master-data ]]; then
     echo "Redis master data doesn't exist, data won't be persistent!"
@@ -36,19 +49,16 @@ function launchsentinel() {
   for master_name in $MASTER_NAME_LIST; do
 
     # config for current master name
-    master_name_upper=$(echo $master_name | tr 'a-z' 'A-Z')
-    master_host_var="REDIS_${master_name_upper}_MASTER_SERVICE_HOST"
-    master_host=`eval echo '$'"$master_host_var"`
-    master_port_var="REDIS_${master_name_upper}_MASTER_SERVICE_PORT"
-    master_port=`eval echo '$'"$master_port_var"`
+    master_host=$(get_master_host $master_name)
+    master_port=$(get_master_port $master_name)
 
     if [ x"$master_host" == x"" ];then
-      echo "env var $master_host_var invalid"
+      echo "env var $master_name master host invalid"
       exit 1
     fi
 
     if [ x"$master_port" == x"" ];then
-      echo "env var $master_port_var invalid"
+      echo "env var $master_name master port invalid"
       exit 1
     fi
     
@@ -73,25 +83,25 @@ function launchslave() {
     echo "Failed to find master-name"
     exit 1
   fi
-  # get master's ip
+  # get master's ip / port
   while true; do
-    master=$(redis-cli -h ${REDIS_SENTINEL_SERVICE_HOST} -p ${REDIS_SENTINEL_SERVICE_PORT} --csv SENTINEL get-master-addr-by-name ${MASTER_NAME} | tr ',' ' ' | cut -d' ' -f1)
-    if [[ -n ${master} ]]; then
-      master="${master//\"}"
-    else
-      echo "Failed to find master of ${MASTER_NAME} in sentinel."
-      sleep 60
+
+    # config for current master name
+    master_host=$(get_master_host $MASTER_NAME)
+    master_port=$(get_master_port $MASTER_PORT)
+
+    if [ x"$master_host" == x"" ];then
+      echo "env var $master_name master host invalid"
       exit 1
-    fi 
-    redis-cli -h ${master} INFO
-    if [[ "$?" == "0" ]]; then
-      break
     fi
-    echo "Connecting to master failed.  Waiting..."
-    sleep 10
-  done
-  sed -i "s/%master-ip%/${master}/" /redis-slave/redis.conf
-  sed -i "s/%master-port%/6379/" /redis-slave/redis.conf
+
+    if [ x"$master_port" == x"" ];then
+      echo "env var $master_name master port invalid"
+      exit 1
+    fi
+
+  sed -i "s/%master-ip%/${master_host}/" /redis-slave/redis.conf
+  sed -i "s/%master-port%/${master_port}/" /redis-slave/redis.conf
   redis-server /redis-slave/redis.conf --protected-mode no
 }
 
